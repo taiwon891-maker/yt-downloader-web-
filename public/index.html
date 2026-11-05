@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>YouTube Video Downloader</title>
+  <style>
+    body { font-family: Arial, sans-serif; display: flex; justify-content: center; padding-top: 50px; background: #f4f4f9; }
+    .card { background: white; padding: 25px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); width: 100%; max-width: 500px; text-align: center; }
+    input { width: 90%; padding: 10px; margin-bottom: 15px; border: 1px solid #ccc; border-radius: 5px; }
+    button { padding: 10px 20px; background: #ff0000; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; }
+    .result { margin-top: 20px; text-align: left; }
+    img { width: 100%; border-radius: 8px; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h2>YouTube Downloader</h2>
+    <input type="text" id="url" placeholder="Paste YouTube Video Link...">
+    <button onclick="fetchInfo()">Get Video</button>
+
+    <div id="result" class="result"></div>
+  </div>
+
+  <script>
+    async function fetchInfo() {
+      const url = document.getElementById('url').value;
+      const resultDiv = document.getElementById('result');
+      resultDiv.innerHTML = 'Loading...';
+
+      try {
+        const res = await fetch(`/api/info?url=${encodeURIComponent(url)}`);
+        const data = await res.json();
+
+        if (data.error) {
+          resultDiv.innerHTML = `<p style="color:red">${data.error}</p>`;
+          return;
+        }
+
+        resultDiv.innerHTML = `
+          <h4>${data.title}</h4>
+          <img src="${data.thumbnail}" />
+          <p style="margin-top:10px;">Select Quality to Download:</p>
+          ${data.formats.map(f => `
+            <a href="/api/download?url=${encodeURIComponent(url)}&itag=${f.itag}" target="_blank">
+              <button style="background:#28a745; margin: 4px;">${f.quality} (${f.container})</button>
+            </a>
+          `).join('')}
+        `;
+      } catch (e) {
+        resultDiv.innerHTML = '<p style="color:red">Failed to process request</p>';
+      }
+    }
+  </script>
+</body>
+</html>
